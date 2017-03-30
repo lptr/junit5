@@ -1,0 +1,4 @@
+smallCommit {
+  tasks = ["check", "-x", "junitPlatformTest"]
+  apply-patch = "patches/small-commit.patch"
+}

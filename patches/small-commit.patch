@@ -1,0 +1,47 @@
+diff --git a/junit-jupiter-api/src/main/java/org/junit/jupiter/api/RepeatedTest.java b/junit-jupiter-api/src/main/java/org/junit/jupiter/api/RepeatedTest.java
+index 3ab01b0..1bfc290 100644
+--- a/junit-jupiter-api/src/main/java/org/junit/jupiter/api/RepeatedTest.java
++++ b/junit-jupiter-api/src/main/java/org/junit/jupiter/api/RepeatedTest.java
+@@ -95,7 +95,7 @@ public @interface RepeatedTest {
+ 	/**
+ 	 * The number of repetitions.
+ 	 *
+-	 * @return the number of repetitions; must be greater than zero
++	 * <p>Any value less than {@code 1} will be treated as {@code 1}.
+ 	 */
+ 	int value();
+
+diff --git a/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/RepeatedTestExtension.java b/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/RepeatedTestExtension.java
+index e89acb5..f98236d 100644
+--- a/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/RepeatedTestExtension.java
++++ b/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/RepeatedTestExtension.java
+@@ -45,7 +45,7 @@ class RepeatedTestExtension implements TestTemplateInvocationContextProvider {
+ 		Method testMethod = Preconditions.notNull(context.getTestMethod().orElse(null), "test method must not be null");
+ 		String displayName = context.getDisplayName();
+ 		RepeatedTest repeatedTest = AnnotationUtils.findAnnotation(testMethod, RepeatedTest.class).get();
+-		int totalRepetitions = totalRepetitions(repeatedTest, testMethod);
++		int totalRepetitions = totalRepetitions(repeatedTest);
+ 		RepeatedTestDisplayNameFormatter formatter = displayNameFormatter(repeatedTest, testMethod, displayName);
+
+ 		// @formatter:off
+@@ -55,18 +55,8 @@ class RepeatedTestExtension implements TestTemplateInvocationContextProvider {
+ 		// @formatter:on
+ 	}
+
+-	private int totalRepetitions(RepeatedTest repeatedTest, Method method) {
+-		int repetitions = repeatedTest.value();
+-
+-		// TODO [#242] Replace logging with precondition check once we have a proper mechanism for
+-		// handling validation exceptions during the TestEngine discovery phase.
+-		if (repetitions < 1) {
+-			String message = "Configuration error: @RepeatedTest on method [%s] must be declared with a positive 'value'. Defaulting to 1 repetition.";
+-			logger.warning(String.format(message, method));
+-			repetitions = 1;
+-		}
+-
+-		return repetitions;
++	private int totalRepetitions(RepeatedTest repeatedTest) {
++		return Math.max(1, repeatedTest.value());
+ 	}
+
+ 	private RepeatedTestDisplayNameFormatter displayNameFormatter(RepeatedTest repeatedTest, Method method,
