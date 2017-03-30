@@ -229,6 +229,7 @@ class PropertiesFileTransformer implements Transformer {
 	private static InputStream toInputStream(Properties props) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream()
 		props.store(baos, '')
-		new ByteArrayInputStream(baos.toByteArray())
+		def contents = new String(baos.toByteArray()).split("\n").findAll { !it.startsWith("#") }.join("\n")
+		new ByteArrayInputStream(contents.bytes)
 	}
 }
