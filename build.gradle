@@ -25,14 +25,8 @@ buildScan {
 }
 
 
-Date buildTimeAndDate = new Date()
+Date buildTimeAndDate = new Date(0)
 ext {
-	// Generate JAR manifest only if code was compiled or recompiled;
-	// otherwise the junitPlatformTest task will always be executed even if
-	// no code changes were made. The reason is that the generation of
-	// the buildDate and buildTime causes JAR manifests to be modified
-	// which triggers unnecessary rebuilding of the dependent JARs.
-	generateManifest = false
 	buildDate = new SimpleDateFormat('yyyy-MM-dd').format(buildTimeAndDate)
 	buildTime = new SimpleDateFormat('HH:mm:ss.SSSZ').format(buildTimeAndDate)
 	buildRevision = versioning.info.commit
@@ -354,15 +348,7 @@ subprojects { subproj ->
 		}
 	}
 
-	compileJava.doLast {
-		// Enable JAR manifest generation
-		generateManifest = true
-	}
-
 	jar {
-		onlyIf {
-			project.generateManifest
-		}
 		manifest {
 			attributes(
 				'Created-By': "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})".toString(),

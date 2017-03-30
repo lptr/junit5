@@ -45,11 +45,6 @@ javadoc {
 jar.enabled = false
 
 shadowJar {
-	// Generate shadow jar only if the underlying manifest was regenerated.
-	// See https://github.com/junit-team/junit5/issues/631
-	onlyIf {
-		(project.generateManifest || !shadowJar.archivePath.exists())
-	}
 	classifier = null
 	configurations = [project.configurations.shadow]
 	exclude 'META-INF/**'

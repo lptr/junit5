@@ -37,12 +37,6 @@ jar.enabled = false
 test.enabled = false // prevent supposed-to-fail integration tests from failing the build
 
 shadowJar {
-	// Generate shadow jar only if the underlying manifest was regenerated.
-	// See https://github.com/junit-team/junit5/issues/631
-	onlyIf {
-		(project.generateManifest || !shadowJar.archivePath.exists())
-	}
-
 	dependsOn(project(':junit-platform-console').shadowJar)
 
 	classifier = null
