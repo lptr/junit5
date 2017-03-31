@@ -10,7 +10,57 @@ index 3ab01b0..1bfc290 100644
 +	 * <p>Any value less than {@code 1} will be treated as {@code 1}.
  	 */
  	int value();
-
+ 
+diff --git a/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/ExtensionRegistry.java b/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/ExtensionRegistry.java
+index 452ff97..26201f9 100644
+--- a/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/ExtensionRegistry.java
++++ b/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/ExtensionRegistry.java
+@@ -24,7 +24,6 @@ import java.util.ServiceLoader;
+ import java.util.Set;
+ import java.util.logging.Logger;
+ import java.util.stream.Stream;
+-import java.util.stream.StreamSupport;
+ 
+ import org.junit.jupiter.api.extension.ExtendWith;
+ import org.junit.jupiter.api.extension.Extension;
+@@ -71,35 +70,16 @@ public class ExtensionRegistry {
+ 	 */
+ 	public static ExtensionRegistry createRegistryWithDefaultExtensions(ConfigurationParameters configParams) {
+ 		ExtensionRegistry extensionRegistry = new ExtensionRegistry(null);
+-
+-		// @formatter:off
+-		LOG.finest(() -> "Registering default extensions: " + DEFAULT_EXTENSIONS.stream()
+-						.map(extension -> extension.getClass().getName())
+-						.collect(toList()));
+-		// @formatter:on
+-
+ 		DEFAULT_EXTENSIONS.forEach(extensionRegistry::registerDefaultExtension);
+ 
+ 		if (configParams.getBoolean(EXTENSIONS_AUTODETECTION_ENABLED_PROPERTY_NAME).orElse(Boolean.FALSE)) {
+-			registerAutoDetectedExtensions(extensionRegistry);
++			ServiceLoader.load(Extension.class, ReflectionUtils.getDefaultClassLoader())//
++					.forEach(extensionRegistry::registerDefaultExtension);
+ 		}
+ 
+ 		return extensionRegistry;
+ 	}
+ 
+-	private static void registerAutoDetectedExtensions(ExtensionRegistry extensionRegistry) {
+-		Iterable<Extension> extensions = ServiceLoader.load(Extension.class, ReflectionUtils.getDefaultClassLoader());
+-
+-		// @formatter:off
+-		LOG.config(() -> "Registering auto-detected extensions: "
+-				+ StreamSupport.stream(extensions.spliterator(), false)
+-						.map(extension -> extension.getClass().getName())
+-						.collect(toList()));
+-		// @formatter:on
+-
+-		extensions.forEach(extensionRegistry::registerDefaultExtension);
+-	}
+-
+ 	/**
+ 	 * Factory for creating and populating a new registry from a list of
+ 	 * extension types and a parent registry.
 diff --git a/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/RepeatedTestExtension.java b/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/RepeatedTestExtension.java
 index e89acb5..f98236d 100644
 --- a/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/RepeatedTestExtension.java
@@ -22,12 +72,12 @@ index e89acb5..f98236d 100644
 -		int totalRepetitions = totalRepetitions(repeatedTest, testMethod);
 +		int totalRepetitions = totalRepetitions(repeatedTest);
  		RepeatedTestDisplayNameFormatter formatter = displayNameFormatter(repeatedTest, testMethod, displayName);
-
+ 
  		// @formatter:off
 @@ -55,18 +55,8 @@ class RepeatedTestExtension implements TestTemplateInvocationContextProvider {
  		// @formatter:on
  	}
-
+ 
 -	private int totalRepetitions(RepeatedTest repeatedTest, Method method) {
 -		int repetitions = repeatedTest.value();
 -
@@ -43,5 +93,5 @@ index e89acb5..f98236d 100644
 +	private int totalRepetitions(RepeatedTest repeatedTest) {
 +		return Math.max(1, repeatedTest.value());
  	}
-
+ 
  	private RepeatedTestDisplayNameFormatter displayNameFormatter(RepeatedTest repeatedTest, Method method,
